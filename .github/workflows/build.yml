@@ -1,0 +1,61 @@
+name: Build MINOS APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses5-dev cmake libffi-dev libssl-dev build-essential ccache
+        pip install buildozer cython==0.29.33
+
+    - name: Prepare files
+      run: |
+        mkdir -p minos_build
+        cp minos_sigint_ufo_scanner_advanced_lock.py minos_build/main.py
+        cat > minos_build/buildozer.spec << 'EOF'
+        [app]
+        title = MINOS SIGINT
+        package.name = minossigint
+        package.domain = org.minos
+        source.dir = .
+        source.include_exts = py,png,jpg,kv,atlas
+        version = 1.0
+        requirements = python3,kivy==2.2.1,numpy,opencv
+        orientation = landscape
+        android.permissions = CAMERA,READ_EXTERNAL_STORAGE,WRITE_EXTERNAL_STORAGE
+        android.api = 33
+        android.minapi = 26
+        android.ndk = 25b
+        android.accept_sdk_license = True
+        android.archs = arm64-v8a
+        [buildozer]
+        log_level = 2
+        EOF
+
+    - name: Build APK
+      run: |
+        cd minos_build
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: MINOS-APK
+        path: minos_build/bin/*.apk
+        retention-days: 7
