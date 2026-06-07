@@ -27,7 +27,7 @@ jobs:
     - name: Prepare files
       run: |
         mkdir -p minos_build
-        cp minos_sigint_ufo_scanner_advanced_lock.py minos_build/main.py
+        cp UFOscanner.py minos_build/main.py
         cat > minos_build/buildozer.spec << 'EOF'
         [app]
         title = MINOS SIGINT
