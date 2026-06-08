@@ -47,7 +47,11 @@ jobs:
     - name: Build APK
       run: |
         cd minos_build
-        buildozer android debug
+        for i in 1 2 3; do
+          buildozer android debug && break
+          echo "Retry $i failed, waiting 30s..."
+          sleep 30
+        done
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
